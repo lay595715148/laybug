@@ -111,7 +111,27 @@ if(!class_exists('Debugger', false)) {
             if(!$tag || !is_string($tag)) $tag = 'main';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
-            syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+            switch($lv) {
+                case self::DEBUG_LEVEL_DEBUG:
+                case 'DEBUG':
+                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    break;
+                case self::DEBUG_LEVEL_INFO:
+                case 'INFO':
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    break;
+                case self::DEBUG_LEVEL_WARN:
+                case 'WARN':
+                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    break;
+                case self::DEBUG_LEVEL_ERROR:
+                case 'ERROR':
+                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    break;
+                default:
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    break;
+            }
         }
         /**
          * print infomation
