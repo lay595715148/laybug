@@ -8,6 +8,11 @@
  */
 
 if(!class_exists('Debugger', false)) {
+    /**
+     * Debug工具类
+     * 
+     * @author Lay Li
+     */
     class Debugger {
         const DEBUG_LEVEL_DEBUG = 1;
         const DEBUG_LEVEL_INFO = 2;
