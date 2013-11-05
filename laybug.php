@@ -21,7 +21,7 @@ if(!class_exists('Debugger', false)) {
         const DEBUG_LEVEL_INFO_CONFIGURE = 16;
         const DEBUG_LEVEL_INFO_INCLUDE = 32;
         const DEBUG_LEVEL_ALL = 63;
-        public function regular($set, $lv = 1) {
+        public static function regular($set, $lv = 1) {
             $ret = $lv & $set;
             return $ret === $lv?true:false;
         }
@@ -61,7 +61,7 @@ if(!class_exists('Debugger', false)) {
             if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
                 self::pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
             }
-            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_DEBUG))) {
                 self::log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
             }
         }
@@ -73,7 +73,7 @@ if(!class_exists('Debugger', false)) {
             if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
                 self::out($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
-            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_INFO))) {
                 self::log($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
         }
@@ -85,7 +85,7 @@ if(!class_exists('Debugger', false)) {
             if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
                 self::out($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
-            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_WARN))) {
                 self::log($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
         }
@@ -104,7 +104,7 @@ if(!class_exists('Debugger', false)) {
             if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
                 self::out($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
-            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_ERROR))) {
                 self::log($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
         }
