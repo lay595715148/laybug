@@ -18,7 +18,14 @@ if(!class_exists('Debugger', false)) {
         const DEBUG_LEVEL_INFO = 2;
         const DEBUG_LEVEL_WARN = 4;
         const DEBUG_LEVEL_ERROR = 8;
-        const DEBUG_LEVEL_ALL = 15;
+        const DEBUG_LEVEL_INFO_CONFIGURE = 16;
+        const DEBUG_LEVEL_INFO_INCLUDE = 32;
+        const DEBUG_LEVEL_ALL = 63;
+        public function regular($set, $lv = 1) {
+            $ret = $lv & $set;
+            return $ret === $lv?true:false;
+        }
+        
         public static $out = false;
         public static $log = false;
         /**
@@ -51,10 +58,10 @@ if(!class_exists('Debugger', false)) {
          * @return void
          */
         public static function debug($msg, $tag = '') {
-            if(self::$out === true || (self::$out && in_array(self::$out, array(1, 3, 5, 7, 9, 11, 13, 15)))) {
+            if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
                 self::pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
             }
-            if(self::$log === true || (self::$log && in_array(self::$log, array(1, 3, 5, 7, 9, 11, 13, 15)))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
                 self::log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
             }
         }
@@ -63,10 +70,10 @@ if(!class_exists('Debugger', false)) {
          * @return void
          */
         public static function info($msg, $tag = '') {
-            if(self::$out === true || (self::$out && in_array(self::$out, array(2, 3, 6, 7, 10, 11, 14, 15)))) {
+            if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
                 self::out($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
-            if(self::$log === true || (self::$log && in_array(self::$log, array(2, 3, 6, 7, 10, 11, 14, 15)))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
                 self::log($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
         }
@@ -75,10 +82,10 @@ if(!class_exists('Debugger', false)) {
          * @return void
          */
         public static function warning($msg, $tag = '') {
-            if(self::$out === true || (self::$out && in_array(self::$out, array(4, 5, 6, 7, 12, 13, 14, 15)))) {
+            if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
                 self::out($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
-            if(self::$log === true || (self::$log && in_array(self::$log, array(4, 5, 6, 7, 12, 13, 14, 15)))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
                 self::log($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
         }
@@ -94,10 +101,10 @@ if(!class_exists('Debugger', false)) {
          * @return void
          */
         public static function error($msg, $tag = '') {
-            if(self::$out === true || (self::$out && in_array(self::$out, array(8, 9, 10, 11, 12, 13, 14, 15)))) {
+            if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
                 self::out($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
-            if(self::$log === true || (self::$log && in_array(self::$log, array(8, 9, 10, 11, 12, 13, 14, 15)))) {
+            if(self::$log === true || (self::$log && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
                 self::log($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
         }
