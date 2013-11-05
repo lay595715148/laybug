@@ -21,6 +21,12 @@ if(!class_exists('Debugger', false)) {
         const DEBUG_LEVEL_INFO_CONFIGURE = 16;
         const DEBUG_LEVEL_INFO_INCLUDE = 32;
         const DEBUG_LEVEL_ALL = 63;
+        /**
+         * 当前数值与给出的debug级别是否匹配
+         * @param int $set
+         * @param int $lv default is 1
+         * @return boolean
+         */
         public static function regular($set, $lv = 1) {
             $ret = $lv & $set;
             return $ret === $lv?true:false;
@@ -30,6 +36,7 @@ if(!class_exists('Debugger', false)) {
         public static $log = false;
         /**
          * initialize Debugger
+         * @param boolean|array<boolean|int> $debug optional
          * @return void
          */
         public static function initialize($debug = '') {
@@ -55,6 +62,8 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out debug infomation
+         * @param string|array|object $msg the message
+         * @param string $tag the tag
          * @return void
          */
         public static function debug($msg, $tag = '') {
@@ -67,6 +76,8 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out info infomation
+         * @param string $msg the message
+         * @param string $tag the tag
          * @return void
          */
         public static function info($msg, $tag = '') {
@@ -79,6 +90,8 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out warning infomation
+         * @param string $msg the message
+         * @param string $tag the tag
          * @return void
          */
         public static function warning($msg, $tag = '') {
@@ -91,6 +104,8 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out warning infomation
+         * @param string $msg the message
+         * @param string $tag the tag
          * @return void
          */
         public static function warn($msg, $tag = '') {
@@ -98,6 +113,8 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out error infomation
+         * @param string $msg the message
+         * @param string $tag the tag
          * @return void
          */
         public static function error($msg, $tag = '') {
@@ -111,6 +128,9 @@ if(!class_exists('Debugger', false)) {
         
         /**
          * syslog infomation
+         * @param string $msg the message
+         * @param int $lv the debug level
+         * @param string $tag the tag
          * @return void
          */
         public static function log($msg = '', $lv = 1, $tag = '') {
@@ -154,6 +174,9 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print infomation
+         * @param string $msg the message
+         * @param int $lv the debug level
+         * @param string $tag the tag
          * @return void
          */
         public static function out($msg = '', $lv = 1, $tag = '') {
@@ -179,6 +202,9 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print mixed infomation
+         * @param mixed $msg the message
+         * @param int $lv the debug level
+         * @param string $tag the tag
          * @return void
          */
         public static function pre($msg = '', $lv = 1, $tag = '') {
@@ -207,7 +233,9 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * parse level to string or integer
-         * @return string|integer
+         * 
+         * @param int $lv the debug level string or level number code
+         * @return string|int
          */
         public static function parseLevel($lv) {
             switch($lv) {
