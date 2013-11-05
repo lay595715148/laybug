@@ -50,55 +50,55 @@ if(!class_exists('Debugger', false)) {
          * print out debug infomation
          * @return void
          */
-        public static function debug($msg, $tag = '', $line = '', $method = '', $class = '') {
+        public static function debug($msg, $tag = '') {
             if(self::$out === true || (self::$out && in_array(self::$out, array(1, 3, 5, 7, 9, 11, 13, 15)))) {
-                self::pre($msg, self::DEBUG_LEVEL_DEBUG, $tag, $line, $method, $class);
+                self::pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
             }
             if(self::$log === true || (self::$log && in_array(self::$log, array(1, 3, 5, 7, 9, 11, 13, 15)))) {
-                self::log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag, $line, $method, $class);
+                self::log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
             }
         }
         /**
          * print out info infomation
          * @return void
          */
-        public static function info($msg, $tag = '', $line = '', $method = '', $class = '') {
+        public static function info($msg, $tag = '') {
             if(self::$out === true || (self::$out && in_array(self::$out, array(2, 3, 6, 7, 10, 11, 14, 15)))) {
-                self::out($msg, self::DEBUG_LEVEL_INFO, $tag, $line, $method, $class);
+                self::out($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
             if(self::$log === true || (self::$log && in_array(self::$log, array(2, 3, 6, 7, 10, 11, 14, 15)))) {
-                self::log($msg, self::DEBUG_LEVEL_INFO, $tag, $line, $method, $class);
+                self::log($msg, self::DEBUG_LEVEL_INFO, $tag);
             }
         }
         /**
          * print out warning infomation
          * @return void
          */
-        public static function warning($msg, $tag = '', $line = '', $method = '', $class = '') {
+        public static function warning($msg, $tag = '') {
             if(self::$out === true || (self::$out && in_array(self::$out, array(4, 5, 6, 7, 12, 13, 14, 15)))) {
-                self::out($msg, self::DEBUG_LEVEL_WARN, $tag, $line, $method, $class);
+                self::out($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
             if(self::$log === true || (self::$log && in_array(self::$log, array(4, 5, 6, 7, 12, 13, 14, 15)))) {
-                self::log($msg, self::DEBUG_LEVEL_WARN, $tag, $line, $method, $class);
+                self::log($msg, self::DEBUG_LEVEL_WARN, $tag);
             }
         }
         /**
          * print out warning infomation
          * @return void
          */
-        public static function warn($msg, $tag = '', $line = '', $method = '', $class = '') {
-            self::warning($msg, $tag, $line, $method, $class);
+        public static function warn($msg, $tag = '') {
+            self::warning($msg, $tag);
         }
         /**
          * print out error infomation
          * @return void
          */
-        public static function error($msg, $tag = '', $line = '', $method = '', $class = '') {
+        public static function error($msg, $tag = '') {
             if(self::$out === true || (self::$out && in_array(self::$out, array(8, 9, 10, 11, 12, 13, 14, 15)))) {
-                self::out($msg, self::DEBUG_LEVEL_ERROR, $tag, $line, $method, $class);
+                self::out($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
             if(self::$log === true || (self::$log && in_array(self::$log, array(8, 9, 10, 11, 12, 13, 14, 15)))) {
-                self::log($msg, self::DEBUG_LEVEL_ERROR, $tag, $line, $method, $class);
+                self::log($msg, self::DEBUG_LEVEL_ERROR, $tag);
             }
         }
         
@@ -106,30 +106,42 @@ if(!class_exists('Debugger', false)) {
          * syslog infomation
          * @return void
          */
-        public static function log($msg = '', $lv = 1, $tag = '', $line = '', $method = '', $class = '') {
+        public static function log($msg = '', $lv = 1, $tag = '') {
+            $stack = debug_backtrace();
+            $first = array_shift($stack);
+            $second = array_shift($stack);
+            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+                $first = $second;
+                $second = array_shift($stack);
+            }
+            $file = $first['file'];
+            $line = $first['line'];
+            $method = $second['class'].$second['type'].$second['function'];
+            $class = $second['class'];
+            
             if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'main';
+            if(!$tag || !is_string($tag)) $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
             switch($lv) {
                 case self::DEBUG_LEVEL_DEBUG:
                 case 'DEBUG':
-                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
                     break;
                 case self::DEBUG_LEVEL_INFO:
                 case 'INFO':
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
                     break;
                 case self::DEBUG_LEVEL_WARN:
                 case 'WARN':
-                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
                     break;
                 case self::DEBUG_LEVEL_ERROR:
                 case 'ERROR':
-                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
                     break;
                 default:
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] $method:$line $msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
                     break;
             }
         }
@@ -137,26 +149,50 @@ if(!class_exists('Debugger', false)) {
          * print infomation
          * @return void
          */
-        public static function out($msg = '', $lv = 1, $tag = '', $line = '', $method = '', $class = '') {
+        public static function out($msg = '', $lv = 1, $tag = '') {
+            $stack = debug_backtrace();
+            $first = array_shift($stack);
+            $second = array_shift($stack);
+            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+                $first = $second;
+                $second = array_shift($stack);
+            }
+            $file = $first['file'];
+            $line = $first['line'];
+            $method = $second['class'].$second['type'].$second['function'];
+            $class = $second['class'];
+            
             if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'main';
+            if(!$tag || !is_string($tag)) $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
             echo '<pre style="padding:0px;margin:0px;border:0px;">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] $method:$line $msg\r\n";
+            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] [$file] $method:$line $msg\r\n";
             echo '</pre>';
         }
         /**
          * print mixed infomation
          * @return void
          */
-        public static function pre($msg = '', $lv = 1, $tag = '', $line = '', $method = '', $class = '') {
+        public static function pre($msg = '', $lv = 1, $tag = '') {
+            $stack = debug_backtrace();
+            $first = array_shift($stack);
+            $second = array_shift($stack);
+            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+                $first = $second;
+                $second = array_shift($stack);
+            }
+            $file = $first['file'];
+            $line = $first['line'];
+            $method = $second['class'].$second['type'].$second['function'];
+            $class = $second['class'];
+            
             if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'main';
+            if(!$tag || !is_string($tag)) $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
             echo '<pre style="padding:0px;margin:0px;border:0px;">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] $method:$line\r\n";
+            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] [$file] $method:$line\r\n";
             echo '</pre>';
             echo '<pre style="padding:0px;margin:0 0 0 20px;border:0px;">';
             print_r($msg);
