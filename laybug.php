@@ -229,7 +229,7 @@ if(!class_exists('Debugger', false)) {
             echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
             echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[$lv]\t[<span title=\"$tag\">".self::cutString($tag, 4, 0)."</span>]\t[<span title=\"$file\">".self::cutString($file, 8, 16)."</span>]\t<span title=\"$class\">".end(explode("\\", $class))."</span>$type$method:$line\r\n";
             echo '</pre>';
-            echo '<pre style="padding:0 0 0 10px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
+            echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
             print_r($msg);
             echo '</pre>';
         }
