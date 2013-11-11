@@ -153,22 +153,22 @@ if(!class_exists('Debugger', false)) {
             switch($lv) {
                 case self::DEBUG_LEVEL_DEBUG:
                 case 'DEBUG':
-                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
+                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_INFO:
                 case 'INFO':
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_WARN:
                 case 'WARN':
-                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
+                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_ERROR:
                 case 'ERROR':
-                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
+                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 default:
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip LAYWORK [$lv] [$tag] [$file] $method:$line $msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
             }
         }
@@ -189,15 +189,16 @@ if(!class_exists('Debugger', false)) {
             }
             $file = $first['file'];
             $line = $first['line'];
-            $method = $second['class'].$second['type'].$second['function'];
+            $method = $second['function'];
+            $type = $second['type'];
             $class = $second['class'];
             
             if(!$method) $method = $class;
             if(!$tag || !is_string($tag)) $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
-            echo '<pre style="padding:0px;margin:0px;border:0px;">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] [$file] $method:$line $msg\r\n";
+            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
+            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[$lv]\t[<span title=\"$tag\">".self::cutString($tag, 4, 0)."</span>]\t[<span title=\"$file\">".self::cutString($file, 8, 16)."</span>]\t<span title=\"$class\">".end(explode("\\", $class))."</span>$type$method:$line\t$msg\r\n";
             echo '</pre>';
         }
         /**
@@ -217,24 +218,78 @@ if(!class_exists('Debugger', false)) {
             }
             $file = $first['file'];
             $line = $first['line'];
-            $method = $second['class'].$second['type'].$second['function'];
+            $method = $second['function'];
+            $type = $second['type'];
             $class = $second['class'];
             
             if(!$method) $method = $class;
             if(!$tag || !is_string($tag)) $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
-            echo '<pre style="padding:0px;margin:0px;border:0px;">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)." $ip [$lv] [$tag] [$file] $method:$line\r\n";
+            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
+            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[$lv]\t[<span title=\"$tag\">".self::cutString($tag, 4, 0)."</span>]\t[<span title=\"$file\">".self::cutString($file, 8, 16)."</span>]\t<span title=\"$class\">".end(explode("\\", $class))."</span>$type$method:$line\r\n";
             echo '</pre>';
-            echo '<pre style="padding:0px;margin:0 0 0 20px;border:0px;">';
+            echo '<pre style="padding:0 0 0 10px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
             print_r($msg);
             echo '</pre>';
         }
         /**
+         * cut string
+         * @param string $string
+         * @param number $front
+         * @param number $follow
+         * @param string $dot
+         * @return string
+         */
+        public static function cutString($string, $front = 10, $follow = 0, $dot = '...') {
+        	$strlen = strlen($string);
+        	if($strlen < $front + $follow) {
+        		return $string;
+        	} else {
+        		$front = abs(intval($front));
+        		$follow = abs(intval($follow));
+	        	$pattern = '/^(.{'.$front.'})(.*)(.{'.$follow.'})$/';
+	        	$bool = preg_match($pattern, $string, $matches);
+	        	if($bool) {
+	        		$front = $matches[1];
+	        		$follow = $matches[3];
+	        		return $front.$dot.$follow;
+	        	} else {
+        			return $string;
+	        		//TODO match error
+	        	}
+        	}
+        }
+        /**
+         * parse level to CSS
+         * 
+         * @param int|string $lv the debug level string or level number code
+         * @return string
+         */
+        public static function parseColor($lv) {
+            switch($lv) {
+                case self::DEBUG_LEVEL_DEBUG:
+                case 'DEBUG':
+                    $lv = 'color:#0066FF';
+                    break;
+                case self::DEBUG_LEVEL_INFO:
+                case 'INFO':
+                    $lv = 'color:#006600';
+                    break;
+                case self::DEBUG_LEVEL_WARN:
+                case 'WARN':
+                    $lv = 'color:#FF9900';
+                    break;
+                case self::DEBUG_LEVEL_ERROR:
+                case 'ERROR':
+                    $lv = 'color:#FF0000';
+            }
+            return $lv;
+        }
+        /**
          * parse level to string or integer
          * 
-         * @param int $lv the debug level string or level number code
+         * @param int|string $lv the debug level string or level number code
          * @return string|int
          */
         public static function parseLevel($lv) {
