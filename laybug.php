@@ -242,23 +242,23 @@ if(!class_exists('Debugger', false)) {
          * @return string
          */
         public static function cutString($string, $front = 10, $follow = 0, $dot = '...') {
-        	$strlen = strlen($string);
-        	if($strlen < $front + $follow) {
-        		return $string;
-        	} else {
-        		$front = abs(intval($front));
-        		$follow = abs(intval($follow));
-	        	$pattern = '/^(.{'.$front.'})(.*)(.{'.$follow.'})$/';
-	        	$bool = preg_match($pattern, $string, $matches);
-	        	if($bool) {
-	        		$front = $matches[1];
-	        		$follow = $matches[3];
-	        		return $front.$dot.$follow;
-	        	} else {
-        			return $string;
-	        		//TODO match error
-	        	}
-        	}
+            $strlen = strlen($string);
+            if($strlen < $front + $follow) {
+                return $string;
+            } else {
+                $front = abs(intval($front));
+                $follow = abs(intval($follow));
+                $pattern = '/^(.{'.$front.'})(.*)(.{'.$follow.'})$/';
+                $bool = preg_match($pattern, $string, $matches);
+                if($bool) {
+                    $front = $matches[1];
+                    $follow = $matches[3];
+                    return $front.$dot.$follow;
+                } else {
+                    return $string;
+                    //TODO match error
+                }
+            }
         }
         /**
          * parse level to CSS
