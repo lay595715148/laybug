@@ -4,14 +4,14 @@
  * @see https://github.com/lay595715148/laybug
  * 
  * @author Lay Li
- * @version: 1.0.0 (build 131010)
+ * @version 1.0.0 (build 131010)
  */
-
-if(!class_exists('Debugger', false)) {
+if(! class_exists('Debugger', false)) {
     /**
      * Debug工具类
-     * 
+     *
      * @author Lay Li
+     * @version 1.0.0 (build 131010)
      */
     class Debugger {
         const DEBUG_LEVEL_DEBUG = 1;
@@ -23,30 +23,44 @@ if(!class_exists('Debugger', false)) {
         const DEBUG_LEVEL_ALL = 63;
         /**
          * 当前数值与给出的debug级别是否匹配
+         *
          * @param int $set
-         * @param int $lv default is 1
+         *            the level number
+         * @param int $lv
+         *            default is 1
          * @return boolean
          */
         public static function regular($set, $lv = 1) {
             $ret = $lv & $set;
-            return $ret === $lv?true:false;
+            return $ret === $lv ? true : false;
         }
-        
+        /**
+         * the flag of print out
+         *
+         * @var boolean int
+         */
         public static $out = false;
+        /**
+         * the flag of syslog
+         *
+         * @var boolean int
+         */
         public static $log = false;
         /**
          * initialize Debugger
-         * @param boolean|array<boolean|int> $debug optional
+         *
+         * @param boolean|array<boolean|int> $debug
+         *            optional
          * @return void
          */
         public static function initialize($debug = '') {
             if(is_bool($debug)) {
                 self::$out = self::$log = $debug;
             } else if(is_array($debug)) {
-                $debug['out'] = isset($debug['out']) ? $debug['out'] : isset($debug[0])?$debug[0]:false;
-                $debug['log'] = isset($debug['log']) ? $debug['log'] : isset($debug[1])?$debug[1]:false;
-                self::$out = ($debug['out'] === true)?true:intval($debug['out']);
-                self::$log = ($debug['log'] === true)?true:intval($debug['log']);
+                $debug['out'] = isset($debug['out']) ? $debug['out'] : isset($debug[0]) ? $debug[0] : false;
+                $debug['log'] = isset($debug['log']) ? $debug['log'] : isset($debug[1]) ? $debug[1] : false;
+                self::$out = ($debug['out'] === true) ? true : intval($debug['out']);
+                self::$log = ($debug['log'] === true) ? true : intval($debug['log']);
             } else if(is_int($debug)) {
                 self::$out = self::$log = $debug;
             } else if($debug === '') {
@@ -62,8 +76,11 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out debug infomation
-         * @param string|array|object $msg the message
-         * @param string $tag the tag
+         *
+         * @param string|array|object $msg
+         *            the message
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function debug($msg, $tag = '') {
@@ -76,8 +93,11 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out info infomation
-         * @param string $msg the message
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function info($msg, $tag = '') {
@@ -90,8 +110,11 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out warning infomation
-         * @param string $msg the message
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function warning($msg, $tag = '') {
@@ -104,8 +127,11 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out warning infomation
-         * @param string $msg the message
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function warn($msg, $tag = '') {
@@ -113,8 +139,11 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * print out error infomation
-         * @param string $msg the message
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function error($msg, $tag = '') {
@@ -128,62 +157,72 @@ if(!class_exists('Debugger', false)) {
         
         /**
          * syslog infomation
-         * @param string $msg the message
-         * @param int $lv the debug level
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param int $lv
+         *            the debug level
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function log($msg = '', $lv = 1, $tag = '') {
             $stack = debug_backtrace();
             $first = array_shift($stack);
             $second = array_shift($stack);
-            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+            while($second['class'] == 'Debugger') { // 判定是不是还在Debugger类里
                 $first = $second;
                 $second = array_shift($stack);
             }
             $file = $first['file'];
             $line = $first['line'];
-            $method = $second['class'].$second['type'].$second['function'];
+            $method = $second['class'] . $second['type'] . $second['function'];
             $class = $second['class'];
             
-            if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'MAIN';
+            if(! $method)
+                $method = $class;
+            if(! $tag || ! is_string($tag))
+                $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
             switch($lv) {
                 case self::DEBUG_LEVEL_DEBUG:
                 case 'DEBUG':
-                    syslog(LOG_DEBUG, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                    syslog(LOG_DEBUG, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_INFO:
                 case 'INFO':
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_WARN:
                 case 'WARN':
-                    syslog(LOG_WARNING, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                    syslog(LOG_WARNING, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 case self::DEBUG_LEVEL_ERROR:
                 case 'ERROR':
-                    syslog(LOG_ERR, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                    syslog(LOG_ERR, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
                 default:
-                    syslog(LOG_INFO, date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                    syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                     break;
             }
         }
         /**
          * print infomation
-         * @param string $msg the message
-         * @param int $lv the debug level
-         * @param string $tag the tag
+         *
+         * @param string $msg
+         *            the message
+         * @param int $lv
+         *            the debug level
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function out($msg = '', $lv = 1, $tag = '') {
             $stack = debug_backtrace();
             $first = array_shift($stack);
             $second = array_shift($stack);
-            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+            while($second['class'] == 'Debugger') { // 判定是不是还在Debugger类里
                 $first = $second;
                 $second = array_shift($stack);
             }
@@ -193,26 +232,32 @@ if(!class_exists('Debugger', false)) {
             $type = $second['type'];
             $class = $second['class'];
             
-            if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'MAIN';
+            if(! $method)
+                $method = $class;
+            if(! $tag || ! is_string($tag))
+                $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
-            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[$lv]\t[<span title=\"$tag\">".self::cutString($tag, 4, 0)."</span>]\t[<span title=\"$file\">".self::cutString($file, 8, 16)."</span>]\t<span title=\"$class\">".end(explode("\\", $class))."</span>$type$method:$line\t$msg\r\n";
+            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
+            echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . self::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . self::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
             echo '</pre>';
         }
         /**
          * print mixed infomation
-         * @param mixed $msg the message
-         * @param int $lv the debug level
-         * @param string $tag the tag
+         *
+         * @param mixed $msg
+         *            the message
+         * @param int $lv
+         *            the debug level
+         * @param string $tag
+         *            the tag
          * @return void
          */
         public static function pre($msg = '', $lv = 1, $tag = '') {
             $stack = debug_backtrace();
             $first = array_shift($stack);
             $second = array_shift($stack);
-            while($second['class'] == 'Debugger') {//判定是不是还在Debugger类里
+            while($second['class'] == 'Debugger') { // 判定是不是还在Debugger类里
                 $first = $second;
                 $second = array_shift($stack);
             }
@@ -222,23 +267,30 @@ if(!class_exists('Debugger', false)) {
             $type = $second['type'];
             $class = $second['class'];
             
-            if(!$method) $method = $class;
-            if(!$tag || !is_string($tag)) $tag = 'MAIN';
+            if(! $method)
+                $method = $class;
+            if(! $tag || ! is_string($tag))
+                $tag = 'MAIN';
             $lv = self::parseLevel($lv);
             $ip = self::ip();
-            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
-            echo date('Y-m-d H:i:s').'.'.floor(microtime()*1000)."\t$ip\t[$lv]\t[<span title=\"$tag\">".self::cutString($tag, 4, 0)."</span>]\t[<span title=\"$file\">".self::cutString($file, 8, 16)."</span>]\t<span title=\"$class\">".end(explode("\\", $class))."</span>$type$method:$line\r\n";
+            echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
+            echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . self::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . self::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
             echo '</pre>';
-            echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;'.self::parseColor($lv).'">';
+            echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
             print_r($msg);
             echo '</pre>';
         }
         /**
          * cut string
+         *
          * @param string $string
+         *            the target string
          * @param number $front
+         *            the front bumber
          * @param number $follow
+         *            the tail bumber
          * @param string $dot
+         *            the dots
          * @return string
          */
         public static function cutString($string, $front = 10, $follow = 0, $dot = '...') {
@@ -248,22 +300,23 @@ if(!class_exists('Debugger', false)) {
             } else {
                 $front = abs(intval($front));
                 $follow = abs(intval($follow));
-                $pattern = '/^(.{'.$front.'})(.*)(.{'.$follow.'})$/';
+                $pattern = '/^(.{' . $front . '})(.*)(.{' . $follow . '})$/';
                 $bool = preg_match($pattern, $string, $matches);
                 if($bool) {
                     $front = $matches[1];
                     $follow = $matches[3];
-                    return $front.$dot.$follow;
+                    return $front . $dot . $follow;
                 } else {
                     return $string;
-                    //TODO match error
+                    // TODO match error
                 }
             }
         }
         /**
          * parse level to CSS
-         * 
-         * @param int|string $lv the debug level string or level number code
+         *
+         * @param int|string $lv
+         *            the debug level string or level number code
          * @return string
          */
         public static function parseColor($lv) {
@@ -288,9 +341,10 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * parse level to string or integer
-         * 
-         * @param int|string $lv the debug level string or level number code
-         * @return string|int
+         *
+         * @param int|string $lv
+         *            the debug level string or level number code
+         * @return string int
          */
         public static function parseLevel($lv) {
             switch($lv) {
@@ -323,6 +377,7 @@ if(!class_exists('Debugger', false)) {
         }
         /**
          * get client ip
+         *
          * @return string
          */
         public static function ip() {
