@@ -18,9 +18,7 @@ if(! class_exists('Debugger', false)) {
         const DEBUG_LEVEL_INFO = 2;
         const DEBUG_LEVEL_WARN = 4;
         const DEBUG_LEVEL_ERROR = 8;
-        const DEBUG_LEVEL_INFO_CONFIGURE = 16;
-        const DEBUG_LEVEL_INFO_INCLUDE = 32;
-        const DEBUG_LEVEL_ALL = 63;
+        const DEBUG_LEVEL_ALL = 15;
         /**
          * 当前数值与给出的debug级别是否匹配
          *
@@ -47,6 +45,12 @@ if(! class_exists('Debugger', false)) {
          */
         public static $log = false;
         /**
+         * Delay debugger in microseconds
+         *
+         * @var boolean int
+         */
+        public static $sleep = false;
+        /**
          * initialize Debugger
          *
          * @param boolean|array<boolean|int> $debug
@@ -59,8 +63,10 @@ if(! class_exists('Debugger', false)) {
             } else if(is_array($debug)) {
                 $debug['out'] = isset($debug['out']) ? $debug['out'] : isset($debug[0]) ? $debug[0] : false;
                 $debug['log'] = isset($debug['log']) ? $debug['log'] : isset($debug[1]) ? $debug[1] : false;
+                $debug['sleep'] = isset($debug['sleep']) ? $debug['sleep'] : isset($debug[2]) ? $debug[2] : false;
                 self::$out = ($debug['out'] === true) ? true : intval($debug['out']);
                 self::$log = ($debug['log'] === true) ? true : intval($debug['log']);
+                self::$sleep = $debug['sleep'] ? intval($debug['sleep']) : false;
             } else if(is_int($debug)) {
                 self::$out = self::$log = $debug;
             } else if($debug === '') {
@@ -241,6 +247,9 @@ if(! class_exists('Debugger', false)) {
             echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
             echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . self::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . self::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
             echo '</pre>';
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         /**
          * print mixed infomation
@@ -279,6 +288,9 @@ if(! class_exists('Debugger', false)) {
             echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
             print_r($msg);
             echo '</pre>';
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         /**
          * cut string
