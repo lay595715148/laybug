@@ -14,6 +14,12 @@ if(defined('INIT_LAYBUG')) {
 // 定义标记
 define('INIT_LAYBUG', true);
 
+//init set output buffering
+ini_set('output_buffering', 'on');
+ini_set('implicit_flush', 'off');
+//ob_start();
+ob_implicit_flush(false);
+
 /**
  * debugger interface, if need to customize,to implement it
  * 
@@ -191,7 +197,10 @@ class Debugger implements IDebugger {
         } else {
             self::$out = self::$log = false;
         }
-        self::register($instance);
+        
+        if($instance) {
+            self::register($instance);
+        }
     }
     /**
      * print out debug infomation
@@ -205,11 +214,13 @@ class Debugger implements IDebugger {
     public static function debug($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
             self::getInstance()->pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_DEBUG))) {
             self::getInstance()->log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
         }
-        usleep(self::$sleep);
     }
     /**
      * print out info infomation
@@ -223,11 +234,13 @@ class Debugger implements IDebugger {
     public static function info($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
             self::getInstance()->out($msg, self::DEBUG_LEVEL_INFO, $tag);
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_INFO))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_INFO, $tag);
         }
-        usleep(self::$sleep);
     }
     /**
      * print out warning infomation
@@ -241,11 +254,13 @@ class Debugger implements IDebugger {
     public static function warning($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
             self::getInstance()->out($msg, self::DEBUG_LEVEL_WARN, $tag);
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_WARN))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_WARN, $tag);
         }
-        usleep(self::$sleep);
     }
     /**
      * print out warning infomation
@@ -271,11 +286,13 @@ class Debugger implements IDebugger {
     public static function error($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
             self::getInstance()->out($msg, self::DEBUG_LEVEL_ERROR, $tag);
+            ob_flush();
+            flush();
+            usleep(self::$sleep);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_ERROR))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_ERROR, $tag);
         }
-        usleep(self::$sleep);
     }
     
     /**
@@ -476,8 +493,6 @@ class Debugger implements IDebugger {
         echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
         echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
         echo '</pre>';
-        ob_flush();
-        flush();
     }
     /**
      * print mixed infomation
@@ -516,8 +531,6 @@ class Debugger implements IDebugger {
         echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
         print_r($msg);
         echo '</pre>';
-        ob_flush();
-        flush();
     }
 }
 ?>
