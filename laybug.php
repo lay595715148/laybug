@@ -13,7 +13,6 @@ if(defined('INIT_LAYBUG')) {
 }
 // 定义标记
 define('INIT_LAYBUG', true);
-
 interface IDebugger {
     public function log($msg, $lv = 1, $tag = '');
     public function out($msg, $lv = 1, $tag = '');
@@ -51,20 +50,71 @@ class Debugger implements IDebugger {
      */
     private static $sleep = false;
     /**
-     * 
-     * @var 
+     *
+     * @var
+     *
      */
     private static $instance = null;
     /**
-     * 获取sleep值
-     * @return boolean|int
+     *
+     * @param string $name
+     *            名称
+     * @return IDebugger
      */
-    public static function getSleep() {
-        return self::$sleep;
+    private static function getInstance($classname = 'Debugger') {
+        if(! self::$instance) {
+            self::$instance = self::getInstanceByClassname('Debugger');
+        }
+        return self::$instance;
+    }
+    /**
+     * 通过类名获取一个实例
+     *
+     * @param string $classname
+     *            类名
+     * @return IDebugger
+     */
+    private static function getInstanceByClassname($classname = 'Debugger') {
+        $class = null;
+        if(self::checkClassname($classname)) {
+            $class = new $classname();
+        }
+        if(! ($class instanceof IDebugger)) {
+            unset($class);
+        }
+        return $class;
+    }
+    /**
+     * 检测是否符合类名格式
+     *
+     * @param string $classname
+     *            类名
+     * @return boolean
+     */
+    private static function checkClassname($classname) {
+        if(is_string($classname) && $classname && class_exists($classname)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * 当前数值与给出的debug级别是否匹配
+     *
+     * @param int $set
+     *            the level number
+     * @param int $lv
+     *            default is 1
+     * @return boolean
+     */
+    private static function regular($set, $lv = 1) {
+        $ret = $lv & $set;
+        return $ret === $lv ? true : false;
     }
     /**
      * 注册一个实现IDebbuger接口的对象实例
-     * @param string|IDebugger $instance
+     * 
+     * @param string|IDebugger $instance            
      */
     public static function register($instance) {
         if($instance && is_string($instance)) {
@@ -105,49 +155,6 @@ class Debugger implements IDebugger {
         self::register($instance);
     }
     /**
-     *
-     * @param string $name
-     *            名称
-     * @return IDebugger
-     */
-    public static function getInstance($classname = 'Debugger') {
-        if(! self::$instance) {
-            self::$instance = self::getInstanceByClassname('Debugger');
-        }
-        return self::$instance;
-    }
-    /**
-     * 通过类名获取一个实例
-     *
-     * @param string $classname
-     *            类名
-     * @return IDebugger
-     */
-    public static function getInstanceByClassname($classname = 'Debugger') {
-        $class = null;
-        if(self::checkClassname($classname)) {
-            $class = new $classname();
-        }
-        if(! ($class instanceof IDebugger)) {
-            unset($class);
-        }
-        return $class;
-    }
-    /**
-     * 检测是否符合类名格式
-     *
-     * @param string $classname
-     *            类名
-     * @return boolean
-     */
-    private static function checkClassname($classname) {
-        if(is_string($classname) && $classname && class_exists($classname)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    /**
      * print out debug infomation
      *
      * @param string|array|object $msg
@@ -163,6 +170,7 @@ class Debugger implements IDebugger {
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_DEBUG))) {
             self::getInstance()->log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
         }
+        usleep(self::$sleep);
     }
     /**
      * print out info infomation
@@ -180,6 +188,7 @@ class Debugger implements IDebugger {
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_INFO))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_INFO, $tag);
         }
+        usleep(self::$sleep);
     }
     /**
      * print out warning infomation
@@ -197,6 +206,7 @@ class Debugger implements IDebugger {
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_WARN))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_WARN, $tag);
         }
+        usleep(self::$sleep);
     }
     /**
      * print out warning infomation
@@ -226,6 +236,119 @@ class Debugger implements IDebugger {
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_ERROR))) {
             self::getInstance()->log($msg, self::DEBUG_LEVEL_ERROR, $tag);
         }
+        usleep(self::$sleep);
+    }
+    
+    /**
+     * cut string
+     *
+     * @param string $string
+     *            the target string
+     * @param number $front
+     *            the front bumber
+     * @param number $follow
+     *            the tail bumber
+     * @param string $dot
+     *            the dots
+     * @return string
+     */
+    protected function cutString($string, $front = 10, $follow = 0, $dot = '...') {
+        $strlen = strlen($string);
+        if($strlen < $front + $follow) {
+            return $string;
+        } else {
+            $front = abs(intval($front));
+            $follow = abs(intval($follow));
+            $pattern = '/^(.{' . $front . '})(.*)(.{' . $follow . '})$/';
+            $bool = preg_match($pattern, $string, $matches);
+            if($bool) {
+                $front = $matches[1];
+                $follow = $matches[3];
+                return $front . $dot . $follow;
+            } else {
+                return $string;
+            }
+        }
+    }
+    /**
+     * parse level to CSS
+     *
+     * @param int|string $lv
+     *            the debug level string or level number code
+     * @return string
+     */
+    protected function parseColor($lv) {
+        switch($lv) {
+            case Debugger::DEBUG_LEVEL_DEBUG:
+            case 'DEBUG':
+                $lv = 'color:#0066FF';
+                break;
+            case Debugger::DEBUG_LEVEL_INFO:
+            case 'INFO':
+                $lv = 'color:#006600';
+                break;
+            case Debugger::DEBUG_LEVEL_WARN:
+            case 'WARN':
+                $lv = 'color:#FF9900';
+                break;
+            case Debugger::DEBUG_LEVEL_ERROR:
+            case 'ERROR':
+                $lv = 'color:#FF0000';
+        }
+        return $lv;
+    }
+    /**
+     * parse level to string or integer
+     *
+     * @param int|string $lv
+     *            the debug level string or level number code
+     * @return string int
+     */
+    protected function parseLevel($lv) {
+        switch($lv) {
+            case Debugger::DEBUG_LEVEL_DEBUG:
+                $lv = 'DEBUG';
+                break;
+            case Debugger::DEBUG_LEVEL_INFO:
+                $lv = 'INFO';
+                break;
+            case Debugger::DEBUG_LEVEL_WARN:
+                $lv = 'WARN';
+                break;
+            case Debugger::DEBUG_LEVEL_ERROR:
+                $lv = 'ERROR';
+                break;
+            case 'DEBUG':
+                $lv = Debugger::DEBUG_LEVEL_DEBUG;
+                break;
+            case 'INFO':
+                $lv = Debugger::DEBUG_LEVEL_INFO;
+                break;
+            case 'WARN':
+                $lv = Debugger::DEBUG_LEVEL_WARN;
+                break;
+            case 'ERROR':
+                $lv = Debugger::DEBUG_LEVEL_ERROR;
+                break;
+        }
+        return $lv;
+    }
+    /**
+     * get client ip
+     *
+     * @return string
+     */
+    protected function ip() {
+        if(getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
+            $ip = getenv('HTTP_CLIENT_IP');
+        } elseif(getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
+            $ip = getenv('HTTP_X_FORWARDED_FOR');
+        } elseif(getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
+            $ip = getenv('REMOTE_ADDR');
+        } elseif(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return preg_match('/[\d\.]{7,15}/', $ip, $matches) ? $matches[0] : '';
     }
     
     /**
@@ -256,8 +379,8 @@ class Debugger implements IDebugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = Debugger::parseLevel($lv);
-        $ip = Debugger::ip();
+        $lv = $this->parseLevel($lv);
+        $ip = $this->ip();
         switch($lv) {
             case Debugger::DEBUG_LEVEL_DEBUG:
             case 'DEBUG':
@@ -309,14 +432,13 @@ class Debugger implements IDebugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = Debugger::parseLevel($lv);
-        $ip = Debugger::ip();
-        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . Debugger::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . Debugger::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
+        $lv = $this->parseLevel($lv);
+        $ip = $this->ip();
+        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
         echo '</pre>';
         ob_flush();
         flush();
-        usleep(Debugger::$sleep);
     }
     /**
      * print mixed infomation
@@ -347,141 +469,16 @@ class Debugger implements IDebugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = Debugger::parseLevel($lv);
-        $ip = Debugger::ip();
-        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . Debugger::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . Debugger::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
+        $lv = $this->parseLevel($lv);
+        $ip = $this->ip();
+        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
         echo '</pre>';
-        echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
+        echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
         print_r($msg);
         echo '</pre>';
         ob_flush();
         flush();
-        usleep(Debugger::$sleep);
-    }
-    /**
-     * 当前数值与给出的debug级别是否匹配
-     *
-     * @param int $set
-     *            the level number
-     * @param int $lv
-     *            default is 1
-     * @return boolean
-     */
-    private static function regular($set, $lv = 1) {
-        $ret = $lv & $set;
-        return $ret === $lv ? true : false;
-    }
-    /**
-     * cut string
-     *
-     * @param string $string
-     *            the target string
-     * @param number $front
-     *            the front bumber
-     * @param number $follow
-     *            the tail bumber
-     * @param string $dot
-     *            the dots
-     * @return string
-     */
-    public static function cutString($string, $front = 10, $follow = 0, $dot = '...') {
-        $strlen = strlen($string);
-        if($strlen < $front + $follow) {
-            return $string;
-        } else {
-            $front = abs(intval($front));
-            $follow = abs(intval($follow));
-            $pattern = '/^(.{' . $front . '})(.*)(.{' . $follow . '})$/';
-            $bool = preg_match($pattern, $string, $matches);
-            if($bool) {
-                $front = $matches[1];
-                $follow = $matches[3];
-                return $front . $dot . $follow;
-            } else {
-                return $string;
-            }
-        }
-    }
-    /**
-     * parse level to CSS
-     *
-     * @param int|string $lv
-     *            the debug level string or level number code
-     * @return string
-     */
-    public static function parseColor($lv) {
-        switch($lv) {
-            case Debugger::DEBUG_LEVEL_DEBUG:
-            case 'DEBUG':
-                $lv = 'color:#0066FF';
-                break;
-            case Debugger::DEBUG_LEVEL_INFO:
-            case 'INFO':
-                $lv = 'color:#006600';
-                break;
-            case Debugger::DEBUG_LEVEL_WARN:
-            case 'WARN':
-                $lv = 'color:#FF9900';
-                break;
-            case Debugger::DEBUG_LEVEL_ERROR:
-            case 'ERROR':
-                $lv = 'color:#FF0000';
-        }
-        return $lv;
-    }
-    /**
-     * parse level to string or integer
-     *
-     * @param int|string $lv
-     *            the debug level string or level number code
-     * @return string int
-     */
-    public static function parseLevel($lv) {
-        switch($lv) {
-            case Debugger::DEBUG_LEVEL_DEBUG:
-                $lv = 'DEBUG';
-                break;
-            case Debugger::DEBUG_LEVEL_INFO:
-                $lv = 'INFO';
-                break;
-            case Debugger::DEBUG_LEVEL_WARN:
-                $lv = 'WARN';
-                break;
-            case Debugger::DEBUG_LEVEL_ERROR:
-                $lv = 'ERROR';
-                break;
-            case 'DEBUG':
-                $lv = Debugger::DEBUG_LEVEL_DEBUG;
-                break;
-            case 'INFO':
-                $lv = Debugger::DEBUG_LEVEL_INFO;
-                break;
-            case 'WARN':
-                $lv = Debugger::DEBUG_LEVEL_WARN;
-                break;
-            case 'ERROR':
-                $lv = Debugger::DEBUG_LEVEL_ERROR;
-                break;
-        }
-        return $lv;
-    }
-    /**
-     * get client ip
-     *
-     * @return string
-     */
-    public static function ip() {
-        if(getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
-            $ip = getenv('HTTP_CLIENT_IP');
-        } elseif(getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
-            $ip = getenv('HTTP_X_FORWARDED_FOR');
-        } elseif(getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
-            $ip = getenv('REMOTE_ADDR');
-        } elseif(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-        return preg_match('/[\d\.]{7,15}/', $ip, $matches) ? $matches[0] : '';
     }
 }
 class_alias('Debugger', 'Laybug');
