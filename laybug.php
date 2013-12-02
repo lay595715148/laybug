@@ -13,14 +13,55 @@ if(defined('INIT_LAYBUG')) {
 }
 // 定义标记
 define('INIT_LAYBUG', true);
+
+/**
+ * debugger interface, if need to customize,to implement it
+ * 
+ * @author Lay Li
+ * @version 1.0.0 (build 131202)
+ *         
+ */
 interface IDebugger {
+    /**
+     * log debugger infomation
+     *
+     * @param string $msg
+     *            the message
+     * @param int $lv
+     *            the debug level
+     * @param string $tag
+     *            the tag
+     * @return void
+     */
     public function log($msg, $lv = 1, $tag = '');
+    /**
+     * print out debugger infomation
+     *
+     * @param string $msg
+     *            the message
+     * @param int $lv
+     *            the debug level
+     * @param string $tag
+     *            the tag
+     * @return void
+     */
     public function out($msg, $lv = 1, $tag = '');
+    /**
+     * multily print out debugger infomation
+     *
+     * @param string $msg
+     *            the message
+     * @param int $lv
+     *            the debug level
+     * @param string $tag
+     *            the tag
+     * @return void
+     */
     public function pre($msg, $lv = 1, $tag = '');
 }
 
 /**
- * Debug工具类
+ * Debug工具类,并且已经实现了IDebugger接口
  *
  * @author Lay Li
  * @version 1.0.0 (build 131010)
@@ -51,17 +92,14 @@ class Debugger implements IDebugger {
     private static $sleep = false;
     /**
      *
-     * @var
-     *
+     * @var the instance of current debugger
      */
     private static $instance = null;
     /**
-     *
-     * @param string $name
-     *            名称
+     * 获取debugger实例
      * @return IDebugger
      */
-    private static function getInstance($classname = 'Debugger') {
+    private static function getInstance() {
         if(! self::$instance) {
             self::$instance = self::getInstanceByClassname('Debugger');
         }
@@ -112,8 +150,8 @@ class Debugger implements IDebugger {
         return $ret === $lv ? true : false;
     }
     /**
-     * 注册一个实现IDebbuger接口的对象实例
-     * 
+     * 注册一个实现了IDebbuger接口的对象实例，并将旧的对象替换掉
+     *
      * @param string|IDebugger $instance            
      */
     public static function register($instance) {
@@ -124,10 +162,11 @@ class Debugger implements IDebugger {
         }
     }
     /**
-     * initialize Debugger
+     * initialize Debugger, if $instance is valid, it will replaces current debugger or create
      *
      * @param boolean|array<boolean|int> $debug
      *            optional
+     * @param string|Idebugger $instance
      * @return void
      */
     public static function initialize($debug = '', $instance = '') {
@@ -481,5 +520,4 @@ class Debugger implements IDebugger {
         flush();
     }
 }
-class_alias('Debugger', 'Laybug');
 ?>
