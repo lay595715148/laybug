@@ -20,7 +20,7 @@ define('INIT_LAYBUG', true);
  * @author Lay Li
  * @version 1.0.0 (build 131010)
  */
-final class Debugger {
+class Debugger {
     const DEBUG_LEVEL_DEBUG = 1;
     const DEBUG_LEVEL_INFO = 2;
     const DEBUG_LEVEL_WARN = 4;
