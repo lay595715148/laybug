@@ -14,49 +14,65 @@ if(defined('INIT_LAYBUG')) {
 // 定义标记
 define('INIT_LAYBUG', true);
 
+interface IDebugger {
+    public function log($msg, $lv = 1, $tag = '');
+    public function out($msg, $lv = 1, $tag = '');
+    public function pre($msg, $lv = 1, $tag = '');
+}
+
 /**
  * Debug工具类
  *
  * @author Lay Li
  * @version 1.0.0 (build 131010)
  */
-class Debugger {
+class Debugger implements IDebugger {
     const DEBUG_LEVEL_DEBUG = 1;
     const DEBUG_LEVEL_INFO = 2;
     const DEBUG_LEVEL_WARN = 4;
     const DEBUG_LEVEL_ERROR = 8;
     const DEBUG_LEVEL_ALL = 15;
     /**
-     * 当前数值与给出的debug级别是否匹配
-     *
-     * @param int $set
-     *            the level number
-     * @param int $lv
-     *            default is 1
-     * @return boolean
-     */
-    public static function regular($set, $lv = 1) {
-        $ret = $lv & $set;
-        return $ret === $lv ? true : false;
-    }
-    /**
      * the flag of print out
      *
      * @var boolean int
      */
-    public static $out = false;
+    private static $out = false;
     /**
      * the flag of syslog
      *
      * @var boolean int
      */
-    public static $log = false;
+    private static $log = false;
     /**
      * Delay debugger in microseconds
      *
      * @var boolean int
      */
-    public static $sleep = false;
+    private static $sleep = false;
+    /**
+     * 
+     * @var 
+     */
+    private static $instance = null;
+    /**
+     * 获取sleep值
+     * @return boolean|int
+     */
+    public static function getSleep() {
+        return self::$sleep;
+    }
+    /**
+     * 注册一个实现IDebbuger接口的对象实例
+     * @param string|IDebugger $instance
+     */
+    public static function register($instance) {
+        if($instance && is_string($instance)) {
+            self::$instance = self::getInstanceByClassname($instance);
+        } else if($instance instanceof IDebugger) {
+            self::$instance = $instance;
+        }
+    }
     /**
      * initialize Debugger
      *
@@ -64,7 +80,7 @@ class Debugger {
      *            optional
      * @return void
      */
-    public static function initialize($debug = '') {
+    public static function initialize($debug = '', $instance = '') {
         if(is_bool($debug)) {
             self::$out = self::$log = $debug;
         } else if(is_array($debug)) {
@@ -86,6 +102,50 @@ class Debugger {
         } else {
             self::$out = self::$log = false;
         }
+        self::register($instance);
+    }
+    /**
+     *
+     * @param string $name
+     *            名称
+     * @return IDebugger
+     */
+    public static function getInstance($classname = 'Debugger') {
+        if(! self::$instance) {
+            self::$instance = self::getInstanceByClassname('Debugger');
+        }
+        return self::$instance;
+    }
+    /**
+     * 通过类名获取一个实例
+     *
+     * @param string $classname
+     *            类名
+     * @return IDebugger
+     */
+    public static function getInstanceByClassname($classname = 'Debugger') {
+        $class = null;
+        if(self::checkClassname($classname)) {
+            $class = new $classname();
+        }
+        if(! ($class instanceof IDebugger)) {
+            unset($class);
+        }
+        return $class;
+    }
+    /**
+     * 检测是否符合类名格式
+     *
+     * @param string $classname
+     *            类名
+     * @return boolean
+     */
+    private static function checkClassname($classname) {
+        if(is_string($classname) && $classname && class_exists($classname)) {
+            return true;
+        } else {
+            return false;
+        }
     }
     /**
      * print out debug infomation
@@ -98,10 +158,10 @@ class Debugger {
      */
     public static function debug($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_DEBUG))) {
-            self::pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
+            self::getInstance()->pre($msg, self::DEBUG_LEVEL_DEBUG, $tag);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_DEBUG))) {
-            self::log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
+            self::getInstance()->log(json_encode($msg), self::DEBUG_LEVEL_DEBUG, $tag);
         }
     }
     /**
@@ -115,10 +175,10 @@ class Debugger {
      */
     public static function info($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_INFO))) {
-            self::out($msg, self::DEBUG_LEVEL_INFO, $tag);
+            self::getInstance()->out($msg, self::DEBUG_LEVEL_INFO, $tag);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_INFO))) {
-            self::log($msg, self::DEBUG_LEVEL_INFO, $tag);
+            self::getInstance()->log($msg, self::DEBUG_LEVEL_INFO, $tag);
         }
     }
     /**
@@ -132,10 +192,10 @@ class Debugger {
      */
     public static function warning($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_WARN))) {
-            self::out($msg, self::DEBUG_LEVEL_WARN, $tag);
+            self::getInstance()->out($msg, self::DEBUG_LEVEL_WARN, $tag);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_WARN))) {
-            self::log($msg, self::DEBUG_LEVEL_WARN, $tag);
+            self::getInstance()->log($msg, self::DEBUG_LEVEL_WARN, $tag);
         }
     }
     /**
@@ -161,10 +221,10 @@ class Debugger {
      */
     public static function error($msg, $tag = '') {
         if(self::$out === true || (self::$out && self::regular(intval(self::$out), self::DEBUG_LEVEL_ERROR))) {
-            self::out($msg, self::DEBUG_LEVEL_ERROR, $tag);
+            self::getInstance()->out($msg, self::DEBUG_LEVEL_ERROR, $tag);
         }
         if(self::$log === true || (self::$log && self::regular(intval(self::$log), self::DEBUG_LEVEL_ERROR))) {
-            self::log($msg, self::DEBUG_LEVEL_ERROR, $tag);
+            self::getInstance()->log($msg, self::DEBUG_LEVEL_ERROR, $tag);
         }
     }
     
@@ -179,7 +239,7 @@ class Debugger {
      *            the tag
      * @return void
      */
-    public static function log($msg = '', $lv = 1, $tag = '') {
+    public function log($msg = '', $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -196,22 +256,22 @@ class Debugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = self::parseLevel($lv);
-        $ip = self::ip();
+        $lv = Debugger::parseLevel($lv);
+        $ip = Debugger::ip();
         switch($lv) {
-            case self::DEBUG_LEVEL_DEBUG:
+            case Debugger::DEBUG_LEVEL_DEBUG:
             case 'DEBUG':
                 syslog(LOG_DEBUG, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                 break;
-            case self::DEBUG_LEVEL_INFO:
+            case Debugger::DEBUG_LEVEL_INFO:
             case 'INFO':
                 syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                 break;
-            case self::DEBUG_LEVEL_WARN:
+            case Debugger::DEBUG_LEVEL_WARN:
             case 'WARN':
                 syslog(LOG_WARNING, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                 break;
-            case self::DEBUG_LEVEL_ERROR:
+            case Debugger::DEBUG_LEVEL_ERROR:
             case 'ERROR':
                 syslog(LOG_ERR, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
                 break;
@@ -231,7 +291,7 @@ class Debugger {
      *            the tag
      * @return void
      */
-    public static function out($msg = '', $lv = 1, $tag = '') {
+    public function out($msg = '', $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -249,14 +309,14 @@ class Debugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = self::parseLevel($lv);
-        $ip = self::ip();
-        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . self::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . self::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
+        $lv = Debugger::parseLevel($lv);
+        $ip = Debugger::ip();
+        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . Debugger::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . Debugger::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
         echo '</pre>';
         ob_flush();
         flush();
-        usleep(self::$sleep);
+        usleep(Debugger::$sleep);
     }
     /**
      * print mixed infomation
@@ -269,7 +329,7 @@ class Debugger {
      *            the tag
      * @return void
      */
-    public static function pre($msg = '', $lv = 1, $tag = '') {
+    public function pre($msg = '', $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -287,17 +347,30 @@ class Debugger {
             $method = $class;
         if(! $tag || ! is_string($tag))
             $tag = 'MAIN';
-        $lv = self::parseLevel($lv);
-        $ip = self::ip();
-        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . self::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . self::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
+        $lv = Debugger::parseLevel($lv);
+        $ip = Debugger::ip();
+        echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . Debugger::cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . Debugger::cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
         echo '</pre>';
-        echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . self::parseColor($lv) . '">';
+        echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . Debugger::parseColor($lv) . '">';
         print_r($msg);
         echo '</pre>';
         ob_flush();
         flush();
-        usleep(self::$sleep);
+        usleep(Debugger::$sleep);
+    }
+    /**
+     * 当前数值与给出的debug级别是否匹配
+     *
+     * @param int $set
+     *            the level number
+     * @param int $lv
+     *            default is 1
+     * @return boolean
+     */
+    private static function regular($set, $lv = 1) {
+        $ret = $lv & $set;
+        return $ret === $lv ? true : false;
     }
     /**
      * cut string
@@ -327,7 +400,6 @@ class Debugger {
                 return $front . $dot . $follow;
             } else {
                 return $string;
-                // TODO match error
             }
         }
     }
@@ -340,19 +412,19 @@ class Debugger {
      */
     public static function parseColor($lv) {
         switch($lv) {
-            case self::DEBUG_LEVEL_DEBUG:
+            case Debugger::DEBUG_LEVEL_DEBUG:
             case 'DEBUG':
                 $lv = 'color:#0066FF';
                 break;
-            case self::DEBUG_LEVEL_INFO:
+            case Debugger::DEBUG_LEVEL_INFO:
             case 'INFO':
                 $lv = 'color:#006600';
                 break;
-            case self::DEBUG_LEVEL_WARN:
+            case Debugger::DEBUG_LEVEL_WARN:
             case 'WARN':
                 $lv = 'color:#FF9900';
                 break;
-            case self::DEBUG_LEVEL_ERROR:
+            case Debugger::DEBUG_LEVEL_ERROR:
             case 'ERROR':
                 $lv = 'color:#FF0000';
         }
@@ -367,29 +439,29 @@ class Debugger {
      */
     public static function parseLevel($lv) {
         switch($lv) {
-            case self::DEBUG_LEVEL_DEBUG:
+            case Debugger::DEBUG_LEVEL_DEBUG:
                 $lv = 'DEBUG';
                 break;
-            case self::DEBUG_LEVEL_INFO:
+            case Debugger::DEBUG_LEVEL_INFO:
                 $lv = 'INFO';
                 break;
-            case self::DEBUG_LEVEL_WARN:
+            case Debugger::DEBUG_LEVEL_WARN:
                 $lv = 'WARN';
                 break;
-            case self::DEBUG_LEVEL_ERROR:
+            case Debugger::DEBUG_LEVEL_ERROR:
                 $lv = 'ERROR';
                 break;
             case 'DEBUG':
-                $lv = self::DEBUG_LEVEL_DEBUG;
+                $lv = Debugger::DEBUG_LEVEL_DEBUG;
                 break;
             case 'INFO':
-                $lv = self::DEBUG_LEVEL_INFO;
+                $lv = Debugger::DEBUG_LEVEL_INFO;
                 break;
             case 'WARN':
-                $lv = self::DEBUG_LEVEL_WARN;
+                $lv = Debugger::DEBUG_LEVEL_WARN;
                 break;
             case 'ERROR':
-                $lv = self::DEBUG_LEVEL_ERROR;
+                $lv = Debugger::DEBUG_LEVEL_ERROR;
                 break;
         }
         return $lv;
