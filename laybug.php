@@ -418,7 +418,7 @@ class Debugger implements IDebugger {
      *            the tag
      * @return void
      */
-    public function log($msg = '', $lv = 1, $tag = '') {
+    public function log($msg, $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -428,7 +428,8 @@ class Debugger implements IDebugger {
         }
         $file = $first['file'];
         $line = $first['line'];
-        $method = $second['class'] . $second['type'] . $second['function'];
+        $method = $second['function'];
+        $type = $second['type'];
         $class = $second['class'];
         
         if(! $method)
@@ -440,22 +441,22 @@ class Debugger implements IDebugger {
         switch($lv) {
             case Debugger::DEBUG_LEVEL_DEBUG:
             case 'DEBUG':
-                syslog(LOG_DEBUG, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                syslog(LOG_DEBUG, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$class$type$method($line)\t$msg");
                 break;
             case Debugger::DEBUG_LEVEL_INFO:
             case 'INFO':
-                syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$class$type$method($line)\t$msg");
                 break;
             case Debugger::DEBUG_LEVEL_WARN:
             case 'WARN':
-                syslog(LOG_WARNING, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                syslog(LOG_WARNING, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$class$type$method($line)\t$msg");
                 break;
             case Debugger::DEBUG_LEVEL_ERROR:
             case 'ERROR':
-                syslog(LOG_ERR, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                syslog(LOG_ERR, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$class$type$method($line)\t$msg");
                 break;
             default:
-                syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$method:$line\t$msg");
+                syslog(LOG_INFO, date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[LAYWORK]\t[$lv]\t[$tag]\t[$file]\t$class$type$method($line)\t$msg");
                 break;
         }
     }
@@ -470,7 +471,7 @@ class Debugger implements IDebugger {
      *            the tag
      * @return void
      */
-    public function out($msg = '', $lv = 1, $tag = '') {
+    public function out($msg, $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -491,7 +492,7 @@ class Debugger implements IDebugger {
         $lv = $this->parseLevel($lv);
         $ip = $this->ip();
         echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\t$msg\r\n";
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method($line)\t$msg\r\n";
         echo '</pre>';
     }
     /**
@@ -505,7 +506,7 @@ class Debugger implements IDebugger {
      *            the tag
      * @return void
      */
-    public function pre($msg = '', $lv = 1, $tag = '') {
+    public function pre($msg, $lv = 1, $tag = '') {
         $stack = debug_backtrace();
         $first = array_shift($stack);
         $second = array_shift($stack);
@@ -526,7 +527,7 @@ class Debugger implements IDebugger {
         $lv = $this->parseLevel($lv);
         $ip = $this->ip();
         echo '<pre style="padding:0px;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
-        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method:$line\r\n";
+        echo date('Y-m-d H:i:s') . '.' . floor(microtime() * 1000) . "\t$ip\t[$lv]\t[<span title=\"$tag\">" . $this->cutString($tag, 4, 0) . "</span>]\t[<span title=\"$file\">" . $this->cutString($file, 8, 16) . "</span>]\t<span title=\"$class\">" . end(explode("\\", $class)) . "</span>$type$method($line)\r\n";
         echo '</pre>';
         echo '<pre style="padding:0 0 0 1em;font-family:Consolas;margin:0px;border:0px;' . $this->parseColor($lv) . '">';
         print_r($msg);
