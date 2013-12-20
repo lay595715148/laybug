@@ -73,11 +73,11 @@ interface IDebugger {
  * @version 1.0.0 (build 131010)
  */
 class Debugger implements IDebugger {
-    const DEBUG_LEVEL_DEBUG = 1;
-    const DEBUG_LEVEL_INFO = 2;
-    const DEBUG_LEVEL_WARN = 4;
-    const DEBUG_LEVEL_ERROR = 8;
-    const DEBUG_LEVEL_ALL = 15;
+    const DEBUG_LEVEL_DEBUG = 0x01;
+    const DEBUG_LEVEL_INFO = 0x02;
+    const DEBUG_LEVEL_WARN = 0x10;
+    const DEBUG_LEVEL_ERROR = 0x20;
+    const DEBUG_LEVEL_ALL = 0xFF;
     /**
      * the flag of print out
      *
